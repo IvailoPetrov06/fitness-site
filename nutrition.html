@@ -8,7 +8,7 @@
 
 <body>
 
-<!-- 🔒 ЗАЩИТА -->
+<!-- 🔒 ЗАЩИТА: ако няма token → register -->
 <script>
 if (!localStorage.getItem("token")) {
   localStorage.setItem("redirect", "nutrition.html");
@@ -30,7 +30,7 @@ if (!localStorage.getItem("token")) {
 
 <main class="section">
   <div class="container">
-    <h2 class="h2 section-title">Add nutrition</h2>
+    <h2 class="h2 section-title">Add Meal</h2>
 
     <form id="mealForm" class="form">
       <input type="text" id="name" placeholder="Food" required />
@@ -39,7 +39,7 @@ if (!localStorage.getItem("token")) {
       <button type="submit" class="btn btn-primary">Save</button>
     </form>
 
-    <h3 class="h3">My meals</h3>
+    <h3 class="h3">My Meals</h3>
     <ul id="mealList"></ul>
   </div>
 </main>
@@ -49,24 +49,33 @@ const API = "http://localhost:3000/api/meals";
 const list = document.getElementById("mealList");
 const form = document.getElementById("mealForm");
 
+function getToken() {
+  return localStorage.getItem("token");
+}
+
 async function loadMeals() {
   list.innerHTML = "";
 
-  const res = await fetch(API);
+  const res = await fetch(API, {
+    headers: { Authorization: getToken() } // token за backend
+  });
   const meals = await res.json();
 
   meals.forEach(m => {
     if (!m.name) return;
 
     const li = document.createElement("li");
-    li.textContent = `${m.name} – ${m.time} – ${m.calories} kcal `;
+    li.textContent = `${m.name} – ${m.time} – ${m.calories} kcal`;
 
     const del = document.createElement("button");
     del.textContent = "Изтрий";
     del.className = "btn btn-secondary";
 
     del.onclick = async () => {
-      await fetch(`${API}/${m.id}`, { method: "DELETE" });
+      await fetch(`${API}/${m.id}`, {
+        method: "DELETE",
+        headers: { Authorization: getToken() } // token за DELETE
+      });
       loadMeals();
     };
 
@@ -89,7 +98,10 @@ form.addEventListener("submit", async (e) => {
 
   await fetch(API, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: getToken() // token за POST
+    },
     body: JSON.stringify({ name, time, calories })
   });
 
@@ -97,6 +109,7 @@ form.addEventListener("submit", async (e) => {
   loadMeals();
 });
 
+// зареждане при отваряне на страницата
 loadMeals();
 </script>
 
