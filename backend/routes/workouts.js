@@ -4,14 +4,16 @@ const router = express.Router();
 let workouts = [];
 let id = 1;
 
-// GET all workouts
 router.get("/", (req, res) => {
   res.json(workouts);
 });
 
-// POST workout
 router.post("/", (req, res) => {
   const { name, time, duration } = req.body;
+
+  if (!name || !time || !duration) {
+    return res.status(400).json({ error: "Invalid data" });
+  }
 
   const workout = {
     id: id++,
@@ -24,7 +26,6 @@ router.post("/", (req, res) => {
   res.json(workout);
 });
 
-// DELETE workout
 router.delete("/:id", (req, res) => {
   workouts = workouts.filter(w => w.id != req.params.id);
   res.json({ success: true });

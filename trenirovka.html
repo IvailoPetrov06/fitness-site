@@ -8,7 +8,7 @@
 
 <body>
 
-<!-- 🔒 ЗАЩИТА: без login → register -->
+<!-- 🔒 ЗАЩИТА -->
 <script>
 if (!localStorage.getItem("token")) {
   localStorage.setItem("redirect", "trenirovka.html");
@@ -32,24 +32,24 @@ if (!localStorage.getItem("token")) {
   <div class="container">
     <h2 class="h2 section-title">Добави тренировка</h2>
 
-    <form id="trainingForm" class="form">
-      <input type="text" id="name" placeholder="Име" required />
-      <input type="time" id="time" required />
-      <input type="number" id="duration" placeholder="Минути" required />
-      <button class="btn btn-primary">Запази</button>
+    <form id="workoutForm" class="form">
+      <input type="text" id="workoutName" placeholder="Име на тренировка" required />
+      <input type="time" id="workoutTime" required />
+      <input type="number" id="workoutDuration" placeholder="Продължителност (минути)" required />
+      <button type="submit" class="btn btn-primary">Запази</button>
     </form>
 
     <h3 class="h3">Моите тренировки</h3>
-    <ul id="trainingList"></ul>
+    <ul id="workoutList"></ul>
   </div>
 </main>
 
 <script>
 const API = "http://localhost:3000/api/workouts";
-const list = document.getElementById("trainingList");
-const form = document.getElementById("trainingForm");
+const list = document.getElementById("workoutList");
+const form = document.getElementById("workoutForm");
 
-async function loadTrainings() {
+async function loadWorkouts() {
   list.innerHTML = "";
 
   const res = await fetch(API, {
@@ -58,23 +58,24 @@ async function loadTrainings() {
     }
   });
 
-  const data = await res.json();
+  const workouts = await res.json();
 
-  data.forEach(t => {
+  workouts.forEach(w => {
     const li = document.createElement("li");
-    li.textContent = `${t.name} – ${t.time} – ${t.duration} мин`;
+    li.textContent = `${w.name} – ${w.time} – ${w.duration} мин `;
 
     const del = document.createElement("button");
     del.textContent = "Изтрий";
     del.className = "btn btn-secondary";
+
     del.onclick = async () => {
-      await fetch(`${API}/${t.id}`, {
+      await fetch(`${API}/${w.id}`, {
         method: "DELETE",
         headers: {
           Authorization: localStorage.getItem("token")
         }
       });
-      loadTrainings();
+      loadWorkouts();
     };
 
     li.appendChild(del);
@@ -82,8 +83,17 @@ async function loadTrainings() {
   });
 }
 
-form.addEventListener("submit", async e => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  const name = document.getElementById("workoutName").value.trim();
+  const time = document.getElementById("workoutTime").value;
+  const duration = document.getElementById("workoutDuration").value;
+
+  if (!name || !time || !duration) {
+    alert("Всички полета са задължителни");
+    return;
+  }
 
   await fetch(API, {
     method: "POST",
@@ -91,18 +101,14 @@ form.addEventListener("submit", async e => {
       "Content-Type": "application/json",
       Authorization: localStorage.getItem("token")
     },
-    body: JSON.stringify({
-      name: name.value,
-      time: time.value,
-      duration: duration.value
-    })
+    body: JSON.stringify({ name, time, duration })
   });
 
   form.reset();
-  loadTrainings();
+  loadWorkouts();
 });
 
-loadTrainings();
+loadWorkouts();
 </script>
 
 <!-- 🔓 LOGOUT -->

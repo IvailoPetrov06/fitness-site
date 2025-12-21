@@ -4,14 +4,16 @@ const router = express.Router();
 let meals = [];
 let id = 1;
 
-// GET all meals
 router.get("/", (req, res) => {
   res.json(meals);
 });
 
-// POST meal
 router.post("/", (req, res) => {
   const { name, time, calories } = req.body;
+
+  if (!name || !time || !calories) {
+    return res.status(400).json({ error: "Invalid data" });
+  }
 
   const meal = {
     id: id++,
@@ -24,7 +26,6 @@ router.post("/", (req, res) => {
   res.json(meal);
 });
 
-// DELETE meal
 router.delete("/:id", (req, res) => {
   meals = meals.filter(m => m.id != req.params.id);
   res.json({ success: true });

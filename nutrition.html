@@ -8,7 +8,7 @@
 
 <body>
 
-<!-- 🔒 ЗАЩИТА: без login → register -->
+<!-- 🔒 ЗАЩИТА -->
 <script>
 if (!localStorage.getItem("token")) {
   localStorage.setItem("redirect", "nutrition.html");
@@ -36,7 +36,7 @@ if (!localStorage.getItem("token")) {
       <input type="text" id="name" placeholder="Храна" required />
       <input type="time" id="time" required />
       <input type="number" id="calories" placeholder="Калории" required />
-      <button class="btn btn-primary">Запази</button>
+      <button type="submit" class="btn btn-primary">Запази</button>
     </form>
 
     <h3 class="h3">Моите хранения</h3>
@@ -52,28 +52,21 @@ const form = document.getElementById("mealForm");
 async function loadMeals() {
   list.innerHTML = "";
 
-  const res = await fetch(API, {
-    headers: {
-      Authorization: localStorage.getItem("token")
-    }
-  });
+  const res = await fetch(API);
+  const meals = await res.json();
 
-  const data = await res.json();
+  meals.forEach(m => {
+    if (!m.name) return;
 
-  data.forEach(m => {
     const li = document.createElement("li");
-    li.textContent = `${m.name} – ${m.time} – ${m.calories} kcal`;
+    li.textContent = `${m.name} – ${m.time} – ${m.calories} kcal `;
 
     const del = document.createElement("button");
     del.textContent = "Изтрий";
     del.className = "btn btn-secondary";
+
     del.onclick = async () => {
-      await fetch(`${API}/${m.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: localStorage.getItem("token")
-        }
-      });
+      await fetch(`${API}/${m.id}`, { method: "DELETE" });
       loadMeals();
     };
 
@@ -82,20 +75,22 @@ async function loadMeals() {
   });
 }
 
-form.addEventListener("submit", async e => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  const name = document.getElementById("name").value.trim();
+  const time = document.getElementById("time").value;
+  const calories = document.getElementById("calories").value;
+
+  if (!name || !time || !calories) {
+    alert("Всички полета са задължителни");
+    return;
+  }
 
   await fetch(API, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: localStorage.getItem("token")
-    },
-    body: JSON.stringify({
-      name: name.value,
-      time: time.value,
-      calories: calories.value
-    })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, time, calories })
   });
 
   form.reset();
@@ -105,7 +100,6 @@ form.addEventListener("submit", async e => {
 loadMeals();
 </script>
 
-<!-- 🔓 LOGOUT -->
 <script>
 function logout() {
   localStorage.clear();
