@@ -30,16 +30,16 @@ if (!localStorage.getItem("token")) {
 
 <main class="section">
   <div class="container">
-    <h2 class="h2 section-title">Добави хранене</h2>
+    <h2 class="h2 section-title">Add nutrition</h2>
 
     <form id="mealForm" class="form">
-      <input type="text" id="name" placeholder="Храна" required />
+      <input type="text" id="name" placeholder="Food" required />
       <input type="time" id="time" required />
-      <input type="number" id="calories" placeholder="Калории" required />
-      <button type="submit" class="btn btn-primary">Запази</button>
+      <input type="number" id="calories" placeholder="Calories" required />
+      <button type="submit" class="btn btn-primary">Save</button>
     </form>
 
-    <h3 class="h3">Моите хранения</h3>
+    <h3 class="h3">My meals</h3>
     <ul id="mealList"></ul>
   </div>
 </main>

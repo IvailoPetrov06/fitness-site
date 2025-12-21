@@ -30,16 +30,16 @@ if (!localStorage.getItem("token")) {
 
 <main class="section">
   <div class="container">
-    <h2 class="h2 section-title">Добави тренировка</h2>
+    <h2 class="h2 section-title">Add workout</h2>
 
     <form id="workoutForm" class="form">
-      <input type="text" id="workoutName" placeholder="Име на тренировка" required />
+      <input type="text" id="workoutName" placeholder="Workout Name" required />
       <input type="time" id="workoutTime" required />
-      <input type="number" id="workoutDuration" placeholder="Продължителност (минути)" required />
-      <button type="submit" class="btn btn-primary">Запази</button>
+      <input type="number" id="workoutDuration" placeholder="Duration (minutes)" required />
+      <button type="submit" class="btn btn-primary">Save</button>
     </form>
 
-    <h3 class="h3">Моите тренировки</h3>
+    <h3 class="h3">My workouts</h3>
     <ul id="workoutList"></ul>
   </div>
 </main>
