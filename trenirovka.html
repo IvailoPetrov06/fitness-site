@@ -2,17 +2,29 @@
 <html lang="bg">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Тренировки | FitnesSite</title>
   <link rel="stylesheet" href="./assets/css/style.css" />
 </head>
+
 <body>
+
+<!-- 🔒 ЗАЩИТА: без login → register -->
+<script>
+if (!localStorage.getItem("token")) {
+  localStorage.setItem("redirect", "trenirovka.html");
+  window.location.href = "register.html";
+}
+</script>
 
 <header class="header">
   <div class="container">
     <a href="index.html" class="logo">
       <span class="span">FitnesSite</span>
     </a>
+
+    <button onclick="logout()" class="btn btn-secondary">
+      Logout
+    </button>
   </div>
 </header>
 
@@ -21,109 +33,84 @@
     <h2 class="h2 section-title">Добави тренировка</h2>
 
     <form id="trainingForm" class="form">
-      <label>
-        Име на тренировка:
-        <input type="text" id="name" required />
-      </label>
-
-      <label>
-        Час:
-        <input type="time" id="time" required />
-      </label>
-
-      <label>
-        Продължителност (минути):
-        <input type="number" id="duration" required />
-      </label>
-
-      <button type="submit" class="btn btn-primary">Запази</button>
-      <input type="hidden" id="editIndex" />
+      <input type="text" id="name" placeholder="Име" required />
+      <input type="time" id="time" required />
+      <input type="number" id="duration" placeholder="Минути" required />
+      <button class="btn btn-primary">Запази</button>
     </form>
 
     <h3 class="h3">Моите тренировки</h3>
-    <ul id="trainingList" class="training-list"></ul>
+    <ul id="trainingList"></ul>
   </div>
 </main>
 
 <script>
-  const form = document.getElementById('trainingForm');
-  const list = document.getElementById('trainingList');
-  const nameInput = document.getElementById('name');
-  const timeInput = document.getElementById('time');
-  const durationInput = document.getElementById('duration');
+const API = "http://localhost:3000/api/workouts";
+const list = document.getElementById("trainingList");
+const form = document.getElementById("trainingForm");
 
-  function loadTrainings() {
-    list.innerHTML = '';
-    const trainings = JSON.parse(localStorage.getItem('trainings')) || [];
+async function loadTrainings() {
+  list.innerHTML = "";
 
-    trainings.forEach((t, index) => {
-      const li = document.createElement('li');
-      li.style.marginBottom = '10px';
-
-      const text = document.createElement('span');
-      text.textContent = `${t.name} – ${t.time} – ${t.duration} мин.`;
-
-      const editBtn = document.createElement('button');
-      editBtn.textContent = 'Редактирай';
-      editBtn.className = 'btn btn-secondary';
-      editBtn.style.marginLeft = '10px';
-      editBtn.addEventListener('click', () => editTraining(index));
-
-      const delBtn = document.createElement('button');
-      delBtn.textContent = 'Изтрий';
-      delBtn.className = 'btn btn-secondary';
-      delBtn.style.marginLeft = '5px';
-      delBtn.addEventListener('click', () => deleteTraining(index));
-
-      li.appendChild(text);
-      li.appendChild(editBtn);
-      li.appendChild(delBtn);
-      list.appendChild(li);
-    });
-  }
-
-  function editTraining(index) {
-    const trainings = JSON.parse(localStorage.getItem('trainings')) || [];
-    const t = trainings[index];
-
-    nameInput.value = t.name;
-    timeInput.value = t.time;
-    durationInput.value = t.duration;
-    document.getElementById('editIndex').value = index;
-  }
-
-  function deleteTraining(index) {
-    const trainings = JSON.parse(localStorage.getItem('trainings')) || [];
-    trainings.splice(index, 1);
-    localStorage.setItem('trainings', JSON.stringify(trainings));
-    loadTrainings();
-  }
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const trainings = JSON.parse(localStorage.getItem('trainings')) || [];
-    const editIndex = document.getElementById('editIndex').value;
-
-    const data = {
-      name: nameInput.value,
-      time: timeInput.value,
-      duration: durationInput.value
-    };
-
-    if (editIndex === '') {
-      trainings.push(data);
-    } else {
-      trainings[editIndex] = data;
-      document.getElementById('editIndex').value = '';
+  const res = await fetch(API, {
+    headers: {
+      Authorization: localStorage.getItem("token")
     }
-
-    localStorage.setItem('trainings', JSON.stringify(trainings));
-    form.reset();
-    loadTrainings();
   });
 
+  const data = await res.json();
+
+  data.forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = `${t.name} – ${t.time} – ${t.duration} мин`;
+
+    const del = document.createElement("button");
+    del.textContent = "Изтрий";
+    del.className = "btn btn-secondary";
+    del.onclick = async () => {
+      await fetch(`${API}/${t.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: localStorage.getItem("token")
+        }
+      });
+      loadTrainings();
+    };
+
+    li.appendChild(del);
+    list.appendChild(li);
+  });
+}
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+
+  await fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token")
+    },
+    body: JSON.stringify({
+      name: name.value,
+      time: time.value,
+      duration: duration.value
+    })
+  });
+
+  form.reset();
   loadTrainings();
+});
+
+loadTrainings();
+</script>
+
+<!-- 🔓 LOGOUT -->
+<script>
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
 </script>
 
 </body>

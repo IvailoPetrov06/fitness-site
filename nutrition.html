@@ -2,119 +2,115 @@
 <html lang="bg">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Хранене | FitnesSite</title>
   <link rel="stylesheet" href="./assets/css/style.css" />
-  <style>
-    .meal-list li { margin-bottom: 10px; }
-    .btn { margin-left: 5px; }
-  </style>
 </head>
+
 <body>
+
+<!-- 🔒 ЗАЩИТА: без login → register -->
+<script>
+if (!localStorage.getItem("token")) {
+  localStorage.setItem("redirect", "nutrition.html");
+  window.location.href = "register.html";
+}
+</script>
 
 <header class="header">
   <div class="container">
-    <a href="index.html" class="logo">FitnesSite</a>
+    <a href="index.html" class="logo">
+      <span class="span">FitnesSite</span>
+    </a>
+
+    <button onclick="logout()" class="btn btn-secondary">
+      Logout
+    </button>
   </div>
 </header>
 
 <main class="section">
   <div class="container">
-    <h2 class="h2 section-title">Добави храна</h2>
+    <h2 class="h2 section-title">Добави хранене</h2>
 
     <form id="mealForm" class="form">
-      <label>
-        Име на храната:
-        <input type="text" id="mealName" required />
-      </label>
-      <label>
-        Време на хранене:
-        <input type="time" id="mealTime" required />
-      </label>
-      <label>
-        Калории:
-        <input type="number" id="mealCalories" required />
-      </label>
-      <button type="submit" class="btn btn-primary">Запази</button>
-      <input type="hidden" id="editMealIndex" />
+      <input type="text" id="name" placeholder="Храна" required />
+      <input type="time" id="time" required />
+      <input type="number" id="calories" placeholder="Калории" required />
+      <button class="btn btn-primary">Запази</button>
     </form>
 
     <h3 class="h3">Моите хранения</h3>
-    <ul id="mealList" class="meal-list"></ul>
+    <ul id="mealList"></ul>
   </div>
 </main>
 
 <script>
-const mealForm = document.getElementById('mealForm');
-const mealList = document.getElementById('mealList');
-const mealNameInput = document.getElementById('mealName');
-const mealTimeInput = document.getElementById('mealTime');
-const mealCaloriesInput = document.getElementById('mealCalories');
-const editMealIndexInput = document.getElementById('editMealIndex');
+const API = "http://localhost:3000/api/meals";
+const list = document.getElementById("mealList");
+const form = document.getElementById("mealForm");
 
-function loadMeals() {
-  const meals = JSON.parse(localStorage.getItem('meals')) || [];
-  mealList.innerHTML = '';
+async function loadMeals() {
+  list.innerHTML = "";
 
-  meals.forEach((meal, index) => {
-    const li = document.createElement('li');
-    li.textContent = `${meal.name} – ${meal.time} – ${meal.calories} калории`;
+  const res = await fetch(API, {
+    headers: {
+      Authorization: localStorage.getItem("token")
+    }
+  });
 
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Редактирай';
-    editBtn.className = 'btn btn-secondary';
-    editBtn.addEventListener('click', () => editMeal(index));
+  const data = await res.json();
 
-    const delBtn = document.createElement('button');
-    delBtn.textContent = 'Изтрий';
-    delBtn.className = 'btn btn-secondary';
-    delBtn.addEventListener('click', () => deleteMeal(index));
+  data.forEach(m => {
+    const li = document.createElement("li");
+    li.textContent = `${m.name} – ${m.time} – ${m.calories} kcal`;
 
-    li.appendChild(editBtn);
-    li.appendChild(delBtn);
-    mealList.appendChild(li);
+    const del = document.createElement("button");
+    del.textContent = "Изтрий";
+    del.className = "btn btn-secondary";
+    del.onclick = async () => {
+      await fetch(`${API}/${m.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: localStorage.getItem("token")
+        }
+      });
+      loadMeals();
+    };
+
+    li.appendChild(del);
+    list.appendChild(li);
   });
 }
 
-function deleteMeal(index) {
-  if(!confirm('Сигурен ли си, че искаш да изтриеш това хранене?')) return;
-  const meals = JSON.parse(localStorage.getItem('meals')) || [];
-  meals.splice(index, 1);
-  localStorage.setItem('meals', JSON.stringify(meals));
-  loadMeals();
-}
-
-function editMeal(index) {
-  const meals = JSON.parse(localStorage.getItem('meals')) || [];
-  const meal = meals[index];
-  mealNameInput.value = meal.name;
-  mealTimeInput.value = meal.time;
-  mealCaloriesInput.value = meal.calories;
-  editMealIndexInput.value = index;
-}
-
-mealForm.addEventListener('submit', function(e) {
+form.addEventListener("submit", async e => {
   e.preventDefault();
-  const meals = JSON.parse(localStorage.getItem('meals')) || [];
-  const data = {
-    name: mealNameInput.value,
-    time: mealTimeInput.value,
-    calories: mealCaloriesInput.value
-  };
 
-  const editIndex = editMealIndexInput.value;
-  if(editIndex === '') meals.push(data);
-  else {
-    meals[editIndex] = data;
-    editMealIndexInput.value = '';
-  }
+  await fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token")
+    },
+    body: JSON.stringify({
+      name: name.value,
+      time: time.value,
+      calories: calories.value
+    })
+  });
 
-  localStorage.setItem('meals', JSON.stringify(meals));
-  mealForm.reset();
+  form.reset();
   loadMeals();
 });
 
 loadMeals();
+</script>
+
+<!-- 🔓 LOGOUT -->
+<script>
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
 </script>
 
 </body>
